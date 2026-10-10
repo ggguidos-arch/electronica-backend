@@ -20,7 +20,19 @@ const conexion = mysql.createPool({
   connectionLimit: 10
 });
 
-app.get('/productos', (req, res) => conexion.query('SELECT * FROM productos', (err, r) => err ? res.status(500).send(err) : res.json(r)));
+app.get('/clientes', (req, res) => {
+  conexion.query('SELECT * FROM clientes', (err, r) => {
+    if (err) return res.status(500).send(err);
+    return res.json(r);
+  });
+});
+
+app.get('/productos', (req, res) => {
+  conexion.query('SELECT * FROM productos', (err, r) => {
+    if (err) return res.status(500).send(err);
+    return res.json(r);
+  });
+});
 
 app.get('/ventas', (req, res) => {
   const sql = `
@@ -29,31 +41,35 @@ app.get('/ventas', (req, res) => {
     INNER JOIN clientes c ON v.cliente_id = c.id
     INNER JOIN productos p ON v.producto_id = p.id
   `;
-  conexion.query(sql, (err, r) => err ? res.status(500).send(err) : res.json(r));
+  conexion.query(sql, (err, r) => {
+    if (err) return res.status(500).send(err);
+    return res.json(r);
+  });
 });
 
-// NUEVO POST: Recibe el nombre del cliente, lo busca o lo crea
 app.post('/ventas', (req, res) => {
   const { cliente_nombre, producto_id, cantidad, fecha } = req.body;
   
   conexion.query('SELECT id FROM clientes WHERE nombre = ?', [cliente_nombre], (err, results) => {
     if (err) return res.status(500).send(err);
     if (results.length > 0) {
-      registrarVenta(results[0].id); // Ya existe
+      registrarVenta(results[0].id);
     } else {
-      conexion.query('INSERT INTO clientes (nombre) VALUES (?)', [cliente_nombre], (err, result) => {
+      conexion.query('INSERT INTO clientes (nombre, telefono) VALUES (?, ?)', [cliente_nombre, 'Sin registrar'], (err, result) => {
         if (err) return res.status(500).send(err);
-        registrarVenta(result.insertId); // Cliente nuevo creado
+        registrarVenta(result.insertId);
       });
     }
   });
 
   function registrarVenta(c_id) {
-    conexion.query('INSERT INTO ventas (cliente_id, producto_id, cantidad, fecha) VALUES (?, ?, ?, ?)', [c_id, producto_id, cantidad, fecha], (err) => err ? res.status(500).send(err) : res.send({ message: 'Venta registrada con éxito' }));
+    conexion.query('INSERT INTO ventas (cliente_id, producto_id, cantidad, fecha) VALUES (?, ?, ?, ?)', [c_id, producto_id, cantidad, fecha], (err) => {
+      if (err) return res.status(500).send(err);
+      return res.send({ message: 'Venta registrada con éxito' });
+    });
   }
 });
 
-// NUEVO PUT: Actualizar venta (también busca o crea el cliente)
 app.put('/ventas/:id', (req, res) => {
   const id = req.params.id;
   const { cliente_nombre, producto_id, cantidad, fecha } = req.body;
@@ -63,7 +79,7 @@ app.put('/ventas/:id', (req, res) => {
     if (results.length > 0) {
       actualizarVenta(results[0].id);
     } else {
-      conexion.query('INSERT INTO clientes (nombre) VALUES (?)', [cliente_nombre], (err, result) => {
+      conexion.query('INSERT INTO clientes (nombre, telefono) VALUES (?, ?)', [cliente_nombre, 'Sin registrar'], (err, result) => {
         if (err) return res.status(500).send(err);
         actualizarVenta(result.insertId);
       });
@@ -71,13 +87,19 @@ app.put('/ventas/:id', (req, res) => {
   });
 
   function actualizarVenta(c_id) {
-    conexion.query('UPDATE ventas SET cliente_id=?, producto_id=?, cantidad=?, fecha=? WHERE id=?', [c_id, producto_id, cantidad, fecha, id], (err) => err ? res.status(500).send(err) : res.send({ message: `Venta actualizada` }));
+    conexion.query('UPDATE ventas SET cliente_id=?, producto_id=?, cantidad=?, fecha=? WHERE id=?', [c_id, producto_id, cantidad, fecha, id], (err) => {
+      if (err) return res.status(500).send(err);
+      return res.send({ message: `Venta actualizada` });
+    });
   }
 });
 
 app.delete('/ventas/:id', (req, res) => {
   const id = req.params.id;
-  conexion.query('DELETE FROM ventas WHERE id=?', [id], (err) => err ? res.status(500).send(err) : res.send({ message: `Venta eliminada` }));
+  conexion.query('DELETE FROM ventas WHERE id=?', [id], (err) => {
+    if (err) return res.status(500).send(err);
+    return res.send({ message: `Venta eliminada` });
+  });
 });
 
 app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
