@@ -22,15 +22,21 @@ const conexion = mysql.createPool({
 
 app.get('/clientes', (req, res) => {
   conexion.query('SELECT * FROM clientes', (err, r) => {
-    if (err) return res.status(500).send(err);
-    return res.json(r);
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.json(r);
+    }
   });
 });
 
 app.get('/productos', (req, res) => {
   conexion.query('SELECT * FROM productos', (err, r) => {
-    if (err) return res.status(500).send(err);
-    return res.json(r);
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.json(r);
+    }
   });
 });
 
@@ -42,8 +48,11 @@ app.get('/ventas', (req, res) => {
     INNER JOIN productos p ON v.producto_id = p.id
   `;
   conexion.query(sql, (err, r) => {
-    if (err) return res.status(500).send(err);
-    return res.json(r);
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.json(r);
+    }
   });
 });
 
@@ -52,6 +61,7 @@ app.post('/ventas', (req, res) => {
   
   conexion.query('SELECT id FROM clientes WHERE nombre = ?', [cliente_nombre], (err, results) => {
     if (err) return res.status(500).send(err);
+    
     if (results.length > 0) {
       registrarVenta(results[0].id);
     } else {
@@ -64,8 +74,11 @@ app.post('/ventas', (req, res) => {
 
   function registrarVenta(c_id) {
     conexion.query('INSERT INTO ventas (cliente_id, producto_id, cantidad, fecha) VALUES (?, ?, ?, ?)', [c_id, producto_id, cantidad, fecha], (err) => {
-      if (err) return res.status(500).send(err);
-      return res.send({ message: 'Venta registrada con éxito' });
+      if (err) {
+        res.status(500).send(err);
+      } else {
+        res.send({ message: 'Venta registrada con éxito' });
+      }
     });
   }
 });
@@ -76,6 +89,7 @@ app.put('/ventas/:id', (req, res) => {
   
   conexion.query('SELECT id FROM clientes WHERE nombre = ?', [cliente_nombre], (err, results) => {
     if (err) return res.status(500).send(err);
+    
     if (results.length > 0) {
       actualizarVenta(results[0].id);
     } else {
@@ -88,8 +102,11 @@ app.put('/ventas/:id', (req, res) => {
 
   function actualizarVenta(c_id) {
     conexion.query('UPDATE ventas SET cliente_id=?, producto_id=?, cantidad=?, fecha=? WHERE id=?', [c_id, producto_id, cantidad, fecha, id], (err) => {
-      if (err) return res.status(500).send(err);
-      return res.send({ message: `Venta actualizada` });
+      if (err) {
+        res.status(500).send(err);
+      } else {
+        res.send({ message: `Venta actualizada` });
+      }
     });
   }
 });
@@ -97,8 +114,15 @@ app.put('/ventas/:id', (req, res) => {
 app.delete('/ventas/:id', (req, res) => {
   const id = req.params.id;
   conexion.query('DELETE FROM ventas WHERE id=?', [id], (err) => {
-    if (err) return res.status(500).send(err);
-    return res.send({ message: `Venta eliminada` });
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.send({ message: `Venta eliminada` });
+    }
+  });
+});
+
+app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
   });
 });
 
