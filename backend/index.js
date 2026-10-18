@@ -123,5 +123,3 @@ app.delete('/ventas/:id', (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`Servidor en puerto ${PORT}`));
-  });
-});
